@@ -15,9 +15,9 @@ const float A = 1;
 const float B = 1;
 const float P = 0.2;
 const float Q = 34;   // LMin
-const int S_ANTS = 7; // standard
-const int E_ANTS = 2; // elite
-const int W_ANTS = 1; // wild
+const int S_ANTS = 1; // standard
+const int E_ANTS = 0; // elite
+const int W_ANTS = 0; // wild
 const int ALL_ANTS = S_ANTS + E_ANTS + W_ANTS;
 
 int s_ants = S_ANTS; // standard
@@ -37,7 +37,7 @@ public:
     void setDistance(float distance) {this->distance = distance;}
     void setPheromone(float pheromone) {this->pheromone = pheromone;}
     
-    DistanceAndPheromone(): distance(0), pheromone(INITIAL_PHEROMONE) {}
+    DistanceAndPheromone(): distance(0), pheromone(INITIAL_PHEROMONE * (rand() % 10 + 0.1)) {}
 };
 
 void fullTable(vector<vector<DistanceAndPheromone>> &table);
@@ -79,9 +79,9 @@ vector<int> spreadAnts() {                          // |    0    |  1  |  2  |  
     ants.push_back(point);
     
     //OPTIONAL
-    cout << "Spread: ";
-    for (auto elem: ants) {cout << elem << "   ";}
-    cout << endl;
+    //cout << "Spread: ";
+    //for (auto elem: ants) {cout << elem << "   ";}
+    //cout << endl;
     
     return ants;
 }
@@ -98,7 +98,7 @@ void setAntType(vector<int> antsProportion, bool &S, bool &E, bool &W) {
     }
     
     //OPTIONAL
-    cout << "AntType: " << antType << endl;
+    //cout << "AntType: " << antType << endl;
     
     switch (antType) {
         case 1:
@@ -116,11 +116,125 @@ void setAntType(vector<int> antsProportion, bool &S, bool &E, bool &W) {
     }
 }
 
+bool notVisited(int v, vector<int> path);
+bool notVisited(int v, vector<int> path) {
+    for (auto elem: path) {
+        if (v == elem) return false;
+    }
+    return true;
+}
+
+float countSInterest(float distance, float pheromone);
+float countSInterest(float distance, float pheromone) {
+    //OPTIONAL
+    //cout << "Interest: " << pheromone << "^" << A << " * " << distance << "^" << B << " = " << pow(pheromone, A) * pow(distance, B) << endl;
+    //cout << "Interest: " << pheromone << " * " << distance << " = " << pheromone * distance << endl;
+    return pow(pheromone, A) * pow(distance, B);
+}
+
+int getSV(vector<DistanceAndPheromone> adjacent, vector<int> path);
+int getSV(vector<DistanceAndPheromone> adjacent, vector<int> path) {
+    int bestV = -1;
+    float bestInterest = 0;
+    for (int v = 0; v < SIZE; v++) {
+        if (adjacent[v].getDistance() != 0  &&  notVisited(v, path)) {
+            float interest = countSInterest(adjacent[v].getDistance(), adjacent[v].getPheromone());
+            if (interest > bestInterest) {
+                bestInterest = interest;
+                bestV = v;
+            }
+        }
+    }
+    return bestV;
+}
+
+int getEV(vector<DistanceAndPheromone> adjacent, vector<int> path);
+int getEV(vector<DistanceAndPheromone> adjacent, vector<int> path) {
+    int bestV;
+    do { int bestV = rand() % SIZE;} while (adjacent[bestV].getDistance() == 0);
+    for (int v = 0; v < SIZE; v++) {
+        if (adjacent[v].getDistance() != 0  &&  notVisited(v, path)) {
+            if (adjacent[bestV].getPheromone() < adjacent[v].getPheromone()) { bestV = v;}
+        }
+    }
+    return bestV;
+}
+
+vector<int> getStandardPath(int v, vector<vector<DistanceAndPheromone>> table);
+vector<int> getStandardPath(int v,  vector<vector<DistanceAndPheromone>> table) {
+    vector<int> path (0);
+    path.push_back(v);
+    for (int i = 0; i < SIZE - 2; i++) {
+        
+        //OPTIONAL
+        //int oldV = v;
+        //cout << "From " << oldV << ":\n";
+        
+        v = getSV(table[v], path);
+        
+        //OPTIONAL
+        //cout << oldV << " -> " << v << endl << endl;
+        
+        path.push_back(v);
+    }
+    int penultimate = 0;
+    for (int i = 0; i < path.size(); i++) {
+        if(path[i] == penultimate) {
+            penultimate++;
+            i = -1;
+        }
+    }
+    path.push_back(penultimate);
+    path.push_back(path[0]);
+    
+    //OPTIONAL
+    cout << "Path: ";
+    for (auto v: path) cout << v << " -> ";
+    cout << endl;
+    
+    return path;
+}
+
+vector<int> getSElitePath(int v, vector<vector<DistanceAndPheromone>> table);
+vector<int> getSElitePath(int v, vector<vector<DistanceAndPheromone>> table) {
+    vector<int> path (0);
+    path.push_back(v);
+    for (int i = 0; i < SIZE - 2; i++) {
+        
+        //OPTIONAL
+        int oldV = v;
+        cout << "From " << oldV << ":\n";
+        
+        v = getEV(table[v], path);
+        
+        //OPTIONAL
+        cout << oldV << " -> " << v << endl << endl;
+        
+        path.push_back(v);
+    }
+    int penultimate = 0;
+    for (int i = 0; i < path.size(); i++) {
+        if(path[i] == penultimate) {
+            penultimate++;
+            i = -1;
+        }
+    }
+    path.push_back(penultimate);
+    path.push_back(path[0]);
+    
+    //OPTIONAL
+    cout << "Path: ";
+    for (auto v: path) cout << v << " -> ";
+    cout << endl;
+    
+    return path;
+}
+
 void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
     int startV = STATIC_START? (rand() % SIZE) : -1;
     
     //OPTIONAL
-    cout << "Vertice: " << startV << "\n";
+    //cout << "Vertice: " << startV << "\n";
     
     for (int i = 0; i < ALL_ANTS; i++) {
         if (!STATIC_START) {startV = rand() % SIZE;}
@@ -130,11 +244,13 @@ void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
         setAntType(antsProportion, standard, elite, wild);
         
         if(standard) {
+            getStandardPath(startV, table);
             //OPTIONAL
-            cout << "standard\n";
+            //cout << "standard\n";
             s_ants--;
         }
         if (elite) {
+            getSElitePath(startV, table);
             //OPTIONAL
             cout << "elite\n";
             e_ants--;
@@ -146,7 +262,7 @@ void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
         }
         
         //OPTIONAL
-        cout << "All ants: " << s_ants << " + " << e_ants << " + " << w_ants << " = " << s_ants + e_ants + w_ants << endl << endl;
+        //cout << "All ants: " << s_ants << " + " << e_ants << " + " << w_ants << " = " << s_ants + e_ants + w_ants << endl << endl;
     }
 }
 
