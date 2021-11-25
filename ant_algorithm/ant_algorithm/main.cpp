@@ -17,7 +17,7 @@ const float P = 0.2;
 const float Q = 34;   // LMin
 const int S_ANTS = 1; // standard
 const int E_ANTS = 1; // elite
-const int W_ANTS = 0; // wild
+const int W_ANTS = 1; // wild
 const int ALL_ANTS = S_ANTS + E_ANTS + W_ANTS;
 
 int s_ants = S_ANTS; // standard
@@ -221,6 +221,27 @@ vector<int> getElitePath(int v, vector<vector<DistanceAndPheromone>> table) {
     return path;
 }
 
+vector<int> getWildPath(int v, vector<vector<DistanceAndPheromone>> table);
+vector<int> getWildPath(int v, vector<vector<DistanceAndPheromone>> table) {
+    vector<int> vertices (0);
+    for (int i = 0; i < SIZE; i++) {if (i != v) {vertices.push_back(i);}}
+    
+    vector<int> path (0);
+    path.push_back(v);
+    for (int i = 0; i < SIZE - 1; i++) {
+        int randomV = rand() % vertices.size();
+        path.push_back(vertices[randomV]);
+        vertices.erase(vertices.begin() + randomV);
+    }
+    path.push_back(v);
+    //OPTIONAL
+    cout << "Path: ";
+    for (auto v: path) cout << v << " -> ";
+    cout << endl;
+    
+    return path;
+}
+
 void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
     int startV = STATIC_START? (rand() % SIZE) : -1;
     for (int i = 0; i < ALL_ANTS; i++) {
@@ -232,18 +253,19 @@ void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
         if(standard) {
             getStandardPath(startV, table);
             //OPTIONAL
-            cout << "standard\n";
+            cout << "standard\n\n";
             s_ants--;
         }
         if (elite) {
             getElitePath(startV, table);
             //OPTIONAL
-            cout << "elite\n";
+            cout << "elite\n\n";
             e_ants--;
         }
         if (wild) {
+            getWildPath(startV, table);
             //OPTIONAL
-            cout << "wild\n";
+            cout << "wild\n\n";
             w_ants--;
         }
         //OPTIONAL
