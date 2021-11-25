@@ -13,7 +13,7 @@ const float INITIAL_PHEROMONE = 0.1;
 
 const float A = 1;
 const float B = 1;
-const float P = 0.2;
+const float P = 0.7;  // how many remains
 const float Q = 34;   // LMin
 const int S_ANTS = 1; // standard
 const int E_ANTS = 1; // elite
@@ -242,6 +242,15 @@ vector<int> getWildPath(int v, vector<vector<DistanceAndPheromone>> table) {
     return path;
 }
 
+void evaporate(vector<vector<DistanceAndPheromone>> &table);
+void evaporate(vector<vector<DistanceAndPheromone>> &table) {
+    for (auto vertices: table) {
+        for (auto v: vertices) {
+            v.setPheromone(v.getPheromone() * P);
+        }
+    }
+}
+
 void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
     int startV = STATIC_START? (rand() % SIZE) : -1;
     for (int i = 0; i < ALL_ANTS; i++) {
@@ -271,6 +280,7 @@ void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
         //OPTIONAL
         //cout << "All ants: " << s_ants << " + " << e_ants << " + " << w_ants << " = " << s_ants + e_ants + w_ants << endl << endl;
     }
+    evaporate(table);
 }
 
 int main() {
