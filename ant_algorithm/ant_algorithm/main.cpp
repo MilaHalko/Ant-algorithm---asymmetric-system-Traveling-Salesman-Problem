@@ -6,17 +6,17 @@ using namespace std;
 
 const int ITTERATIONS = 1;
 
-const int SIZE = 10;  // goal 300
-const int MIN_DISTANCE = 2; // goal 5
-const int MAX_DISTANCE = 7; // goal 150
-const float INITIAL_PHEROMONE = 0.2;
+const int SIZE = 5;  // goal 300
+const int MIN_DISTANCE = 1; // goal 5
+const int MAX_DISTANCE = 10; // goal 150
+const float INITIAL_PHEROMONE = 0.1;
 
 const float A = 1;
 const float B = 1;
 const float P = 0.2;
 const float Q = 34;   // LMin
 const int S_ANTS = 1; // standard
-const int E_ANTS = 0; // elite
+const int E_ANTS = 1; // elite
 const int W_ANTS = 0; // wild
 const int ALL_ANTS = S_ANTS + E_ANTS + W_ANTS;
 
@@ -40,13 +40,13 @@ public:
     DistanceAndPheromone(): distance(0), pheromone(INITIAL_PHEROMONE * (rand() % 10 + 0.1)) {}
 };
 
-void fullTable(vector<vector<DistanceAndPheromone>> &table);
-void fullTable(vector<vector<DistanceAndPheromone>> &table) {
+void generateTable(vector<vector<DistanceAndPheromone>> &table);
+void generateTable(vector<vector<DistanceAndPheromone>> &table) {
     table.resize(SIZE);
     for (int i = 0; i < SIZE; i++) {
         table[i].resize(SIZE);
         for (int j = 0; j < SIZE; j++) {
-            float distance = (i == j) ? 0 : (1 / float(rand() % (MAX_DISTANCE - MIN_DISTANCE) + MIN_DISTANCE));
+            float distance = (i == j) ? 0 : (1 / float(rand() % (MAX_DISTANCE - MIN_DISTANCE + 1) + MIN_DISTANCE));
             table[i][j].setDistance(distance);
         }
     }
@@ -97,9 +97,6 @@ void setAntType(vector<int> antsProportion, bool &S, bool &E, bool &W) {
         }
     }
     
-    //OPTIONAL
-    //cout << "AntType: " << antType << endl;
-    
     switch (antType) {
         case 1:
             S = true;
@@ -134,24 +131,38 @@ float countSInterest(float distance, float pheromone) {
 
 int getSV(vector<DistanceAndPheromone> adjacent, vector<int> path);
 int getSV(vector<DistanceAndPheromone> adjacent, vector<int> path) {
-    int bestV = -1;
-    float bestInterest = 0;
+    vector<pair<float, int>> scale (0);
     for (int v = 0; v < SIZE; v++) {
         if (adjacent[v].getDistance() != 0  &&  notVisited(v, path)) {
-            float interest = countSInterest(adjacent[v].getDistance(), adjacent[v].getPheromone());
-            if (interest > bestInterest) {
-                bestInterest = interest;
-                bestV = v;
-            }
+            scale.push_back(make_pair(countSInterest(adjacent[v].getDistance(), adjacent[v].getPheromone()), v));
         }
     }
-    return bestV;
+    float prevSum = 0;
+    for (int i = 0; i < scale.size(); i++) {
+        scale[i].first = scale[i].first + prevSum;
+        prevSum = scale[i].first;
+    }
+    //OPTIONAL
+    //cout << "Scale:\n";
+    //for (int i = 0; i < scale.size(); i++) {cout << scale[i].second << ": " << scale[i].first << endl;}
+    
+    float percent = (rand() % 101);
+    percent = (scale[scale.size() - 1].first * percent) / float(100);
+    
+    int v = -1;
+    for (int i = 0; i < scale.size(); i++) {
+        if (percent <= scale[i].first) {
+            v = scale[i].second;
+            break;
+        }
+    }
+    return v;
 }
 
 int getEV(vector<DistanceAndPheromone> adjacent, vector<int> path);
 int getEV(vector<DistanceAndPheromone> adjacent, vector<int> path) {
     int bestV;
-    do { int bestV = rand() % SIZE;} while (adjacent[bestV].getDistance() == 0);
+    do { bestV = rand() % SIZE;} while (adjacent[bestV].getDistance() == 0);
     for (int v = 0; v < SIZE; v++) {
         if (adjacent[v].getDistance() != 0  &&  notVisited(v, path)) {
             if (adjacent[bestV].getPheromone() < adjacent[v].getPheromone()) { bestV = v;}
@@ -165,16 +176,7 @@ vector<int> getStandardPath(int v,  vector<vector<DistanceAndPheromone>> table) 
     vector<int> path (0);
     path.push_back(v);
     for (int i = 0; i < SIZE - 2; i++) {
-        
-        //OPTIONAL
-        //int oldV = v;
-        //cout << "From " << oldV << ":\n";
-        
         v = getSV(table[v], path);
-        
-        //OPTIONAL
-        //cout << oldV << " -> " << v << endl << endl;
-        
         path.push_back(v);
     }
     int penultimate = 0;
@@ -186,7 +188,6 @@ vector<int> getStandardPath(int v,  vector<vector<DistanceAndPheromone>> table) 
     }
     path.push_back(penultimate);
     path.push_back(path[0]);
-    
     //OPTIONAL
     cout << "Path: ";
     for (auto v: path) cout << v << " -> ";
@@ -195,21 +196,12 @@ vector<int> getStandardPath(int v,  vector<vector<DistanceAndPheromone>> table) 
     return path;
 }
 
-vector<int> getSElitePath(int v, vector<vector<DistanceAndPheromone>> table);
-vector<int> getSElitePath(int v, vector<vector<DistanceAndPheromone>> table) {
+vector<int> getElitePath(int v, vector<vector<DistanceAndPheromone>> table);
+vector<int> getElitePath(int v, vector<vector<DistanceAndPheromone>> table) {
     vector<int> path (0);
     path.push_back(v);
     for (int i = 0; i < SIZE - 2; i++) {
-        
-        //OPTIONAL
-        int oldV = v;
-        cout << "From " << oldV << ":\n";
-        
         v = getEV(table[v], path);
-        
-        //OPTIONAL
-        cout << oldV << " -> " << v << endl << endl;
-        
         path.push_back(v);
     }
     int penultimate = 0;
@@ -221,7 +213,6 @@ vector<int> getSElitePath(int v, vector<vector<DistanceAndPheromone>> table) {
     }
     path.push_back(penultimate);
     path.push_back(path[0]);
-    
     //OPTIONAL
     cout << "Path: ";
     for (auto v: path) cout << v << " -> ";
@@ -232,13 +223,8 @@ vector<int> getSElitePath(int v, vector<vector<DistanceAndPheromone>> table) {
 
 void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
     int startV = STATIC_START? (rand() % SIZE) : -1;
-    
-    //OPTIONAL
-    //cout << "Vertice: " << startV << "\n";
-    
     for (int i = 0; i < ALL_ANTS; i++) {
-        if (!STATIC_START) {startV = rand() % SIZE;}
-        
+        if (!STATIC_START) startV = rand() % SIZE;
         bool standard = false, elite = false, wild = false;
         vector<int> antsProportion = spreadAnts();
         setAntType(antsProportion, standard, elite, wild);
@@ -246,11 +232,11 @@ void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
         if(standard) {
             getStandardPath(startV, table);
             //OPTIONAL
-            //cout << "standard\n";
+            cout << "standard\n";
             s_ants--;
         }
         if (elite) {
-            getSElitePath(startV, table);
+            getElitePath(startV, table);
             //OPTIONAL
             cout << "elite\n";
             e_ants--;
@@ -260,7 +246,6 @@ void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
             cout << "wild\n";
             w_ants--;
         }
-        
         //OPTIONAL
         //cout << "All ants: " << s_ants << " + " << e_ants << " + " << w_ants << " = " << s_ants + e_ants + w_ants << endl << endl;
     }
@@ -269,8 +254,7 @@ void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
 int main() {
     srand(static_cast<unsigned int>(time(0)));
     vector<vector<DistanceAndPheromone>> table (0, vector<DistanceAndPheromone>(0)); //table of distances and pheromones
-    //generateDistances(table);
-    fullTable(table);
+    generateTable(table);
     
     //OPTIONAL
     coutTable(table);
