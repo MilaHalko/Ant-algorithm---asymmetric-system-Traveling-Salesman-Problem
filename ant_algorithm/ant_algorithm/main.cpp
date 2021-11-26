@@ -14,7 +14,7 @@ const float INITIAL_PHEROMONE = 0.1;
 const float A = 1;
 const float B = 1;
 const float P = 0.7;  // how many remains
-const float Q = 34;   // LMin
+const float Q = 4;   // LMin
 const int S_ANTS = 1; // standard
 const int E_ANTS = 1; // elite
 const int W_ANTS = 1; // wild
@@ -251,52 +251,94 @@ void evaporate(vector<vector<DistanceAndPheromone>> &table) {
     }
 }
 
+float getPathDistance(vector<int> path, vector<vector<DistanceAndPheromone>> table);
+float getPathDistance(vector<int> path, vector<vector<DistanceAndPheromone>> table) {
+    float distance = 0;
+    for (int i = 0; i < path.size() - 1; i++) {
+        distance += 1 / table[path[i]][path[i+1]].getDistance();
+    }
+    //OPTIONAL
+    cout << "Distance = " << distance << endl;
+    return distance;
+}
+
+void upgradePheromones(vector<int> path, float distance, vector<vector<float>> &newPheromones, bool elite);
+void upgradePheromones(vector<int> path, float distance, vector<vector<float>> &newPheromones, bool elite) {
+    float newPh = Q / distance;
+    newPh *= elite? 2 : 1;
+    for (int i = 0; i < path.size() - 1; i++) {
+        newPheromones[path[i]][path[i+1]] += newPh;
+    }
+    //OPTIONAL
+    /*cout << "New pheromone = " << newPh << endl;
+    cout << "New pheromones:\n";
+    for (auto ps: newPheromones) {
+        for (auto p: ps) cout << p << "  ";
+        cout << endl;
+    } */
+}
+
+void addPheromones(vector<vector<DistanceAndPheromone>> &table, vector<vector<float>> newPheromones);
+void addPheromones(vector<vector<DistanceAndPheromone>> &table, vector<vector<float>> newPheromones) {
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            table[i][j].setPheromone(newPheromones[i][j]);
+        }
+    }
+}
+
 void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
+    vector<vector<float>> newPheromones (SIZE, vector<float> (SIZE));
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            newPheromones[i][j] = table[i][j].getPheromone();
+        }
+    }
     int startV = STATIC_START? (rand() % SIZE) : -1;
     for (int i = 0; i < ALL_ANTS; i++) {
         if (!STATIC_START) startV = rand() % SIZE;
         bool standard = false, elite = false, wild = false;
         vector<int> antsProportion = spreadAnts();
         setAntType(antsProportion, standard, elite, wild);
-        
+        vector<int> path(SIZE + 1);
         if(standard) {
-            getStandardPath(startV, table);
+            path = getStandardPath(startV, table);
             //OPTIONAL
-            cout << "standard\n\n";
+            cout << "standard\n";
             s_ants--;
         }
         if (elite) {
-            getElitePath(startV, table);
+            path = getElitePath(startV, table);
             //OPTIONAL
-            cout << "elite\n\n";
+            cout << "elite\n";
             e_ants--;
         }
         if (wild) {
-            getWildPath(startV, table);
+            path = getWildPath(startV, table);
             //OPTIONAL
-            cout << "wild\n\n";
+            cout << "wild\n";
             w_ants--;
         }
+        float distance = getPathDistance(path, table);
+        upgradePheromones(path, distance, newPheromones, elite);
         //OPTIONAL
-        //cout << "All ants: " << s_ants << " + " << e_ants << " + " << w_ants << " = " << s_ants + e_ants + w_ants << endl << endl;
+        cout << endl;
     }
     evaporate(table);
+    addPheromones(table, newPheromones);
 }
 
 int main() {
     srand(static_cast<unsigned int>(time(0)));
     vector<vector<DistanceAndPheromone>> table (0, vector<DistanceAndPheromone>(0)); //table of distances and pheromones
     generateTable(table);
-    
     //OPTIONAL
     coutTable(table);
-    
     for (int i = 0; i < ITTERATIONS; i++) {
         s_ants = S_ANTS;
         e_ants = E_ANTS;
         w_ants = W_ANTS;
         colonySearchProcess(table);
     }
-    
     return 0;
 }
