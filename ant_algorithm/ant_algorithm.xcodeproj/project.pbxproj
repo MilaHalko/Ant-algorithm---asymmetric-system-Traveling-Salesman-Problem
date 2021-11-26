@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		217A37A327513C7F00AC1241 /* Libs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 217A37A127513C7F00AC1241 /* Libs.cpp */; };
+		217A37AC27513FD600AC1241 /* Ant algorithm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 217A37AA27513FD600AC1241 /* Ant algorithm.cpp */; };
 		218B53A6274D91400093E3FB /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 218B53A5274D91400093E3FB /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +25,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		217A37A127513C7F00AC1241 /* Libs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Libs.cpp; sourceTree = "<group>"; };
+		217A37A227513C7F00AC1241 /* Libs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Libs.hpp; sourceTree = "<group>"; };
+		217A37AA27513FD600AC1241 /* Ant algorithm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "Ant algorithm.cpp"; sourceTree = "<group>"; };
+		217A37AB27513FD600AC1241 /* Ant algorithm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "Ant algorithm.hpp"; sourceTree = "<group>"; };
 		218B53A2274D91400093E3FB /* ant_algorithm */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ant_algorithm; sourceTree = BUILT_PRODUCTS_DIR; };
 		218B53A5274D91400093E3FB /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -58,6 +64,10 @@
 			isa = PBXGroup;
 			children = (
 				218B53A5274D91400093E3FB /* main.cpp */,
+				217A37AB27513FD600AC1241 /* Ant algorithm.hpp */,
+				217A37AA27513FD600AC1241 /* Ant algorithm.cpp */,
+				217A37A227513C7F00AC1241 /* Libs.hpp */,
+				217A37A127513C7F00AC1241 /* Libs.cpp */,
 			);
 			path = ant_algorithm;
 			sourceTree = "<group>";
@@ -118,7 +128,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				217A37AC27513FD600AC1241 /* Ant algorithm.cpp in Sources */,
 				218B53A6274D91400093E3FB /* main.cpp in Sources */,
+				217A37A327513C7F00AC1241 /* Libs.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
