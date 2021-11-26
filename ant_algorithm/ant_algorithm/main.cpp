@@ -4,7 +4,7 @@
 #include <time.h>
 using namespace std;
 
-const int ITTERATIONS = 1;
+const int ITTERATIONS = 2;
 
 const int SIZE = 5;  // goal 300
 const int MIN_DISTANCE = 1; // goal 5
@@ -77,12 +77,10 @@ vector<int> spreadAnts() {                          // |    0    |  1  |  2  |  
     ants.push_back(point);
     point += w_ants;
     ants.push_back(point);
-    
     //OPTIONAL
     //cout << "Spread: ";
     //for (auto elem: ants) {cout << elem << "   ";}
     //cout << endl;
-    
     return ants;
 }
 
@@ -115,9 +113,7 @@ void setAntType(vector<int> antsProportion, bool &S, bool &E, bool &W) {
 
 bool notVisited(int v, vector<int> path);
 bool notVisited(int v, vector<int> path) {
-    for (auto elem: path) {
-        if (v == elem) return false;
-    }
+    for (auto elem: path) {if (v == elem) return false;}
     return true;
 }
 
@@ -145,7 +141,7 @@ int getSV(vector<DistanceAndPheromone> adjacent, vector<int> path) {
     //OPTIONAL
     //cout << "Scale:\n";
     //for (int i = 0; i < scale.size(); i++) {cout << scale[i].second << ": " << scale[i].first << endl;}
-    
+
     float percent = (rand() % 101);
     percent = (scale[scale.size() - 1].first * percent) / float(100);
     
@@ -188,11 +184,6 @@ vector<int> getStandardPath(int v,  vector<vector<DistanceAndPheromone>> table) 
     }
     path.push_back(penultimate);
     path.push_back(path[0]);
-    //OPTIONAL
-    cout << "Path: ";
-    for (auto v: path) cout << v << " -> ";
-    cout << endl;
-    
     return path;
 }
 
@@ -213,11 +204,6 @@ vector<int> getElitePath(int v, vector<vector<DistanceAndPheromone>> table) {
     }
     path.push_back(penultimate);
     path.push_back(path[0]);
-    //OPTIONAL
-    cout << "Path: ";
-    for (auto v: path) cout << v << " -> ";
-    cout << endl;
-    
     return path;
 }
 
@@ -234,11 +220,6 @@ vector<int> getWildPath(int v, vector<vector<DistanceAndPheromone>> table) {
         vertices.erase(vertices.begin() + randomV);
     }
     path.push_back(v);
-    //OPTIONAL
-    cout << "Path: ";
-    for (auto v: path) cout << v << " -> ";
-    cout << endl;
-    
     return path;
 }
 
@@ -257,8 +238,6 @@ float getPathDistance(vector<int> path, vector<vector<DistanceAndPheromone>> tab
     for (int i = 0; i < path.size() - 1; i++) {
         distance += 1 / table[path[i]][path[i+1]].getDistance();
     }
-    //OPTIONAL
-    cout << "Distance = " << distance << endl;
     return distance;
 }
 
@@ -275,7 +254,7 @@ void upgradePheromones(vector<int> path, float distance, vector<vector<float>> &
     for (auto ps: newPheromones) {
         for (auto p: ps) cout << p << "  ";
         cout << endl;
-    } */
+    }*/
 }
 
 void addPheromones(vector<vector<DistanceAndPheromone>> &table, vector<vector<float>> newPheromones);
@@ -287,7 +266,7 @@ void addPheromones(vector<vector<DistanceAndPheromone>> &table, vector<vector<fl
     }
 }
 
-void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
+void colonySearchProcess(vector<vector<DistanceAndPheromone>> &table) {
     vector<vector<float>> newPheromones (SIZE, vector<float> (SIZE));
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
@@ -298,34 +277,62 @@ void colonySearchProcess(vector<vector<DistanceAndPheromone>> table) {
     for (int i = 0; i < ALL_ANTS; i++) {
         if (!STATIC_START) startV = rand() % SIZE;
         bool standard = false, elite = false, wild = false;
+        
         vector<int> antsProportion = spreadAnts();
         setAntType(antsProportion, standard, elite, wild);
+        
         vector<int> path(SIZE + 1);
         if(standard) {
             path = getStandardPath(startV, table);
-            //OPTIONAL
-            cout << "standard\n";
             s_ants--;
         }
         if (elite) {
             path = getElitePath(startV, table);
-            //OPTIONAL
-            cout << "elite\n";
             e_ants--;
         }
         if (wild) {
             path = getWildPath(startV, table);
-            //OPTIONAL
-            cout << "wild\n";
             w_ants--;
         }
+        //OPTIONAL
+        /*cout << "Path: ";
+        for (auto v: path) cout << v << " -> ";
+        cout << endl;*/
         float distance = getPathDistance(path, table);
         upgradePheromones(path, distance, newPheromones, elite);
-        //OPTIONAL
-        cout << endl;
     }
     evaporate(table);
     addPheromones(table, newPheromones);
+}
+
+vector<int> getBestPath(vector<vector<DistanceAndPheromone>> table) {
+    vector<int> path (2);
+    float theBiggestPh = 0;
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            if (i != j  &&  theBiggestPh < table[i][j].getPheromone()) {
+                theBiggestPh = table[i][j].getPheromone();
+                path[0] = i;
+                path[1] = j;
+            }
+        }
+    }
+    for (int i = 1; i < SIZE - 1; i++) {
+        int bestV = -1;
+        float bestPh = 0;
+        for (int v = 0; v < SIZE; v++) {
+            if (notVisited(v, path)) {
+                float ph = table[path[i]][v].getPheromone();
+                if (ph > bestPh) {
+                    bestPh = ph;
+                    bestV = v;
+                }
+            }
+        }
+        path.push_back(bestV);
+    }
+    path.push_back(path[0]);
+    return path;
 }
 
 int main() {
@@ -340,5 +347,10 @@ int main() {
         w_ants = W_ANTS;
         colonySearchProcess(table);
     }
+    vector<int> bestPath = getBestPath(table);
+    coutTable(table);
+    cout << "Best distance is " << getPathDistance(bestPath, table) << endl;
+    cout << "Best path: ";
+    for (int i = 0; i < SIZE; i++) cout << bestPath[i] << " -> "; cout << bestPath[0] << endl;
     return 0;
 }
